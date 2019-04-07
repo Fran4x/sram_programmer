@@ -124,12 +124,22 @@ void setup() {
 
   digitalWrite(CHIP_ENABLE, HIGH);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
+  Serial.setTimeout(5000);
+  Serial.write(0xFF); //Arduino is ready
 }
 
 void loop() {
-  for (int i = 0; i <= 0x7FFF; i++) {
-    write(i, i % 255);
-    Serial.println(read(i));
+  while (Serial.available() > 0) {
+    String instruction = Serial.readStringUntil('\n');
+    if (instruction == "r") {
+      Serial.println(read(Serial.parseInt()));
+    } else if (instruction == "w"){
+      int address = Serial.parseInt();
+      int data = Serial.parseInt();
+      write(address, data);
+      Serial.println(); //Write is complete
+    }
   }
+  
 }
