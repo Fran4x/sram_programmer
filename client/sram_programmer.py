@@ -31,6 +31,28 @@ def write_byte(args):
     print("Write complete")
 
 
+def verify_byte(address, data):
+    return (do_read(address) == data)
+
+
+def write_file(args):
+    initialize_serial(args.p, args.b)
+    address = int(args.offset_address, 16)
+    with open(args.file, 'rb') as f:
+        f.seek(int(args.offset_file, 16), 1)
+        byte = f.read(1)
+        while(byte != b''):
+            do_write(address, int.from_bytes(byte, byteorder='little'))
+
+            while(not verify_byte(address, int.from_bytes(byte, byteorder='little'))):
+                print('Byte at '+str(hex(address))+' not ' +
+                      str(int.from_bytes(byte, 'little')) + ', retrying')
+
+            address += 1
+            byte = f.read(1)
+    print('File writing complete')
+
+
 def do_write(address, data):
     arduino.write(b'w\n')
     arduino.write((str(address)+'\n'+str(data)+'\n').encode('ascii'))
@@ -55,6 +77,14 @@ def main():
         'address', help='writes to this hex address')
     parser_write_byte.add_argument('data', help='writes this integer')
     parser_write_byte.set_defaults(func=write_byte)
+
+    parser_write_file = subparsers.add_parser('write_file')
+    parser_write_file.add_argument('file', help='writes this file')
+    parser_write_file.set_defaults(func=write_file)
+    parser_write_file.add_argument(
+        '-offset_address', help='starts writing to this sram address(default: 0x0000)', default='0x0000')
+    parser_write_file.add_argument(
+        '-offset_file', help='writes starting from this address from file(default:0x0000)', default='0x0000')
 
     args = parser.parse_args()
     args.func(args)
