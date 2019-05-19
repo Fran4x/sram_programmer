@@ -42,11 +42,9 @@ def write_file(args):
         f.seek(int(args.offset_file, 16), 1)
         byte = f.read(1)
         while(byte != b''):
+            if(address % 64 == 0):
+                print('Writing to address:' + str(hex(address)))
             do_write(address, int.from_bytes(byte, byteorder='little'))
-
-            while(not verify_byte(address, int.from_bytes(byte, byteorder='little'))):
-                print('Byte at '+str(hex(address))+' not ' +
-                      str(int.from_bytes(byte, 'little')) + ', retrying')
 
             address += 1
             byte = f.read(1)
@@ -60,10 +58,12 @@ def verify_file(args):
         f.seek(int(args.offset_file, 16), 1)
         byte = f.read(1)
         while(byte != b''):
-
-            if(not verify_byte(address, int.from_bytes(byte, byteorder='little'))):
+            if(address % 64 == 0):
+                print('Verifying address: ' + str(hex(address)))
+            while(not verify_byte(address, int.from_bytes(byte, byteorder='little'))):
                 print('Byte at '+str(hex(address))+' not ' +
-                      str(int.from_bytes(byte, 'little')))
+                      str(int.from_bytes(byte, 'little')) + ', retrying')
+                do_write(address, int.from_bytes(byte, byteorder='little'))
 
             address += 1
             byte = f.read(1)

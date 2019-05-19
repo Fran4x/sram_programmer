@@ -56,7 +56,6 @@ int read(int address) {
   digitalWrite(WRITE_ENABLE, HIGH);
   digitalWrite(CHIP_ENABLE, LOW);
   digitalWrite(OUTPUT_ENABLE, LOW);
-  delayMicroseconds(2); // address to output delay(tACC)
 
   int read = read_byte();
   digitalWrite(CHIP_ENABLE, HIGH);
@@ -76,10 +75,10 @@ void write_byte(int address, int byte) {
   digitalWrite(CHIP_ENABLE, LOW);
   digitalWrite(WRITE_ENABLE, LOW);
 
-  delayMicroseconds(1); // write pulse width(TWP)
+
   digitalWrite(WRITE_ENABLE, HIGH);
   digitalWrite(CHIP_ENABLE, HIGH);
-  delayMicroseconds(1);
+
 }
 
 void write_prepare() {
@@ -93,6 +92,11 @@ void write(int address, int byte) {
   write_prepare();
 
   write_byte(address, byte);
+
+  while(read(address)!=byte){
+    write_prepare();
+    write_byte(address,byte);
+  }
 }
 
 /*void disable_software_protection() {
